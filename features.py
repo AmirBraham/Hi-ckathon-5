@@ -375,14 +375,14 @@ class Features:
         features = pd.DataFrame(columns=[self.key,'month'])
         features[self.key] = self.data[self.key]
         seasonal_feat = pd.DataFrame()
-        # Ensure the date column is in datetime format
-        seasonal_feat = self.data['piezo_station_update_date'].apply(lambda x:datetime.strptime(x.split()[1], "%b").month)
+          # Convert 'piezo_measurement_date' to datetime
+        self.data['piezo_measurement_date'] = pd.to_datetime(self.data['piezo_measurement_date'], format='%Y-%m-%d', errors='coerce')
         
-        # Create the cosine of the month as a seasonality feature
-        # Normalize month to [0, 2π] scale for cosine calculation
-        seasonal_feat = np.cos(2 * np.pi * (seasonal_feat - 1) / 12)
-
-        features['month'] = seasonal_feat
+        # Extract the month
+        features['month'] = self.data['piezo_measurement_date'].dt.month
+        
+        # Optionally, create the cosine of the month as a seasonality feature
+        features['month_cosine'] = np.cos(2 * np.pi * (features['month'] - 1) / 12)
 
         return features
 
