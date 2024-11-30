@@ -1,6 +1,9 @@
 # Import necessary libraries
 import pandas as pd
+import numpy as np
+import logger
 from geopy.distance import geodesic  # For geospatial calculations
+from datetime import datetime
 
 class Features:
     def __init__(self, data, key):
@@ -359,6 +362,28 @@ class Features:
         ]
         # Select relevant columns along with the key
         features = self.data[[self.key] + distance_important_cols]
+        return features
+    
+    
+    def construct_seasonality_features(self):
+        """
+        Adds a seasonality feature to the data by calculating the cosine of the month
+        derived from the `piezo_station_update_date` column.
+        
+        Assumes `piezo_station_update_date` is a datetime column or can be parsed as datetime.
+        """
+        features = pd.DataFrame(columns=[self.key,'month'])
+        features[self.key] = self.data[self.key]
+        seasonal_feat = pd.DataFrame()
+        # Ensure the date column is in datetime format
+        seasonal_feat = self.data['piezo_station_update_date'].apply(lambda x:datetime.strptime(x.split()[1], "%b").month)
+        
+        # Create the cosine of the month as a seasonality feature
+        # Normalize month to [0, 2π] scale for cosine calculation
+        seasonal_feat = np.cos(2 * np.pi * (seasonal_feat - 1) / 12)
+
+        features['month'] = seasonal_feat
+
         return features
 
     
