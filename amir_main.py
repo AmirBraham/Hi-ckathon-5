@@ -33,7 +33,7 @@ if os.path.exists(processed_data_path) and os.path.exists(processed_target_path)
 else:
     print("Preprocessing data...")
     # Desired number of samples
-    n_samples = 100000
+    n_samples = 500000
 
     # First, get the total number of lines in the CSV file
     with open(raw_file_path, 'r') as f:
