@@ -317,6 +317,50 @@ class Features:
         
         return constructed_features
 
+    def construct_insee_features(self):
+        """
+        Constructs economic-related features from the dataset.
+        
+        Returns:
+            pd.DataFrame: Dataset with selected water-related features and `self.key`.
+        """
+        # Define the columns to use
+        insee_important_cols = [
+            'insee_%_agri',
+            'insee_pop_commune',
+            'insee_med_living_level',
+            'insee_%_ind',
+            'insee_%_const',
+        ]
+        # Select relevant columns along with the key
+        features = self.data[[self.key] + insee_important_cols]
+        colonnes_object = [
+            'insee_%_agri',
+            'insee_med_living_level',
+            'insee_%_ind',
+            'insee_%_const',
+        ]
+        # Convertir ces colonnes en float
+        for col in colonnes_object:
+            features[col] = pd.to_numeric(features[col], errors='coerce')
+        
+        return features
+    
+    def construct_distance_features(self):
+        """
+        Constructs distance-related features from the dataset.
+        
+        Returns:
+            pd.DataFrame: Dataset with selected water-related features and `self.key`.
+        """
+        distance_important_cols = [
+            'distance_piezo_hydro',
+            'distance_piezo_meteo'
+        ]
+        # Select relevant columns along with the key
+        features = self.data[[self.key] + distance_important_cols]
+        return features
+
     
 
 
