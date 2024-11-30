@@ -6,7 +6,6 @@ class Features:
     def __init__(self, data, key):
         self.data = data
         self.key = key
-
     def construct_meteo_features(self):
         """
         Constructs water-related features from the dataset.

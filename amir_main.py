@@ -3,58 +3,44 @@ import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.impute import SimpleImputer
-from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder
-from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score, f1_score
 from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
+from features import Features
+from functools import reduce
 
-# Define the columns to use
-water_important_cols = [
-    'meteo_amplitude_tn_tx',
-    'meteo_temperature_max',
-    'meteo_temperature_min',
-    'meteo_temperature_avg',
-    'meteo_rain_height',
-    'piezo_station_investigation_depth',
-    'piezo_station_altitude',
-    'piezo_station_longitude',
-    'piezo_station_latitude',
-    'piezo_measurement_date',
-    'piezo_obtention_mode',
-]   
-
-# Add the target column
+# Define the key and target column
+key = "row_index"
 target_column = 'piezo_groundwater_level_category'
 
 # Load the data
-# If your dataset is large, you can read it in chunks. For simplicity, we'll read it all at once here.
-# Replace 'X_train_Hi5.csv' with your actual file path
 file_path = 'X_train_Hi5.csv'
-
-# Read the data
-data = pd.read_csv(file_path,nrows=100000, usecols=water_important_cols + [target_column],)
+data = pd.read_csv(file_path, nrows=500_000)
 
 # Drop rows with missing target values
 data = data.dropna(subset=[target_column])
-
-# Separate features and target variable
-X = data[water_important_cols]
 y = data[target_column]
+
+# Construct features using the Features class
+features = Features(data, key)
+meteo_features = features.construct_meteo_features()
+piezo_features = features.construct_piezo_features()
+withdrawal_features = features.construct_withdrawal_features()
+
+# Merge all features on the key
+dfs = [meteo_features, piezo_features, withdrawal_features]
+X = reduce(lambda left, right: pd.merge(left, right, on=key), dfs)
 
 # Identify numerical and categorical columns
 numerical_cols = X.select_dtypes(include=['int64', 'float64']).columns.tolist()
 categorical_cols = X.select_dtypes(include=['object', 'category']).columns.tolist()
 
-# For this dataset, let's check which columns are categorical
-print("Categorical columns:", categorical_cols)
-
-# If 'meteo_if_snow' is not numerical, treat it as categorical
-# Let's assume 'meteo_if_snow' is categorical (e.g., 'Yes', 'No')
+# Handle 'meteo_if_snow' if it's categorical
 if 'meteo_if_snow' in X.columns and X['meteo_if_snow'].dtype == 'object':
     categorical_cols.append('meteo_if_snow')
     numerical_cols.remove('meteo_if_snow')
 
-# Handle missing values and encoding
 # Preprocessing for numerical data
 numerical_transformer = SimpleImputer(strategy='median')
 
@@ -78,7 +64,6 @@ clf = Pipeline(steps=[
 ])
 
 # Encode target variable
-# Since it's categorical (e.g., 'very low', 'low', etc.), we need to encode it
 y_encoded = y.astype('category').cat.codes
 
 # Split into training and test sets
@@ -100,13 +85,21 @@ print(confusion_matrix(y_test, y_pred))
 print("\nAccuracy Score:")
 print(accuracy_score(y_test, y_pred))
 
+# Calculate the F1 score
+f1 = f1_score(y_test, y_pred, average='weighted')
+print("\nF1 Score:")
+print(f1)
+
 # Access the trained RandomForestClassifier from the pipeline
 model = clf.named_steps['classifier']
 
 # Get the feature importances
 importances = model.feature_importances_
+print("\nFeature Importances:")
 print(importances)
+
 # Get the feature names from the preprocessor
 # Numerical feature names remain the same
 numerical_feature_names = numerical_cols
+print("\nNumerical Feature Names:")
 print(numerical_feature_names)
