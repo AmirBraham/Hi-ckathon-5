@@ -1,0 +1,22 @@
+# Core Libraries
+numpy
+pandas
+scipy
+
+# Visualization
+matplotlib
+seaborn
+plotly
+
+# Machine Learning
+scikit-learn
+xgboost
+lightgbm
+
+# Miscellaneous
+jupyter
+notebook
+ipywidgets
+
+geopy
+
