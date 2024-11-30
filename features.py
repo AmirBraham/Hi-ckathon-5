@@ -7,7 +7,7 @@ class Features:
         self.data = data
         self.key = key
 
-    def construct_water_features(self):
+    def construct_meteo_features(self):
         """
         Constructs water-related features from the dataset.
         
@@ -15,22 +15,38 @@ class Features:
             pd.DataFrame: Dataset with selected water-related features and `self.key`.
         """
         # Define the columns to use
-        water_important_cols = [
+        meteo_important_cols = [
             'meteo_amplitude_tn_tx',
             'meteo_temperature_max',
             'meteo_temperature_min',
             'meteo_temperature_avg',
             'meteo_rain_height',
+        ]
+        # Select relevant columns along with the key
+        features = self.data[[self.key] + meteo_important_cols]
+        return features
+
+    def construct_piezo_features(self):
+        """
+        Constructs piezo-related features from the dataset.
+        
+        Returns:
+            pd.DataFrame: Dataset with selected water-related features and `self.key`.
+        """
+        # Define the columns to use
+        piezo_important_cols = [
             'piezo_station_investigation_depth',
             'piezo_station_altitude',
             'piezo_station_longitude',
             'piezo_station_latitude',
-            'piezo_measurement_date',
+            # 'piezo_measurement_date',
             'piezo_obtention_mode',
         ]
         # Select relevant columns along with the key
-        features = self.data[[self.key] + water_important_cols]
+        features = self.data[[self.key] + piezo_important_cols]
         return features
+
+
 
     def construct_withdrawal_features(self, obs_latitude=None, obs_longitude=None):
         """
