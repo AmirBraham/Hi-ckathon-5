@@ -2,15 +2,15 @@
 import pandas as pd
 import os
 import random
-from xgboost import XGBClassifier
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score, f1_score
 from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, GridSearchCV
 from functools import reduce
 import joblib  # For saving and loading the model
+from sklearn.ensemble import RandomForestClassifier
 
 from features import Features
 
@@ -24,7 +24,7 @@ processed_data_path = 'preprocessed_data.csv'  # File to save/load preprocessed 
 processed_target_path = 'preprocessed_target.csv'  # File to save/load target variable
 model_path = 'trained_model.pkl'  # File to save/load the trained model
 label_mapping_path = 'label_mapping.pkl'  # File to save/load label mappings
-
+A
 # Check if preprocessed data exists
 if os.path.exists(processed_data_path) and os.path.exists(processed_target_path):
     print("Loading preprocessed data...")
@@ -112,23 +112,25 @@ preprocessor = ColumnTransformer(
     ])
 
 # Create a pipeline that includes the preprocessor and the classifier
-clf = Pipeline(steps=[
+pipeline = Pipeline(steps=[
     ('preprocessor', preprocessor),
-    ('classifier', XGBClassifier(
-        n_estimators=100,
-        random_state=42,
-        tree_method='gpu_hist',  # Use GPU acceleration if available
-        use_label_encoder=False,
-        eval_metric='mlogloss'
-    ))
+    ('classifier', RandomForestClassifier(random_state=42))
 ])
+
+# Define parameter grid for Grid Search
+param_grid = {
+    'classifier__n_estimators': [100, 150],
+    'classifier__max_depth': [None, 3,10, 15],
+}
 
 # Check if model is already trained and saved
 if os.path.exists(model_path):
     print("Loading trained model...")
     clf = joblib.load(model_path)
 else:
-    print("Training the model...")
+    print("Training the model with Grid Search...")
+    # Set up GridSearchCV
+    clf = GridSearchCV(pipeline, param_grid=param_grid, cv=3, n_jobs=-1, verbose=2)
     # Train the model
     clf.fit(X_train, y_train)
     # Save the trained model
